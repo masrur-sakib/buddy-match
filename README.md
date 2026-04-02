@@ -1,1 +1,1 @@
-# aaa
+# buddy-script
