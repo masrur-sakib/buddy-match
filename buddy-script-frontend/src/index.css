@@ -1,0 +1,4 @@
+/* App root; layout styles come from /public/assets/css */
+#root {
+  min-height: 100vh;
+}
