@@ -233,7 +233,7 @@ export default function Registration() {
                           className='_social_registration_form_btn_link _btn1'
                           disabled={isSubmitting}
                         >
-                          {isSubmitting ? 'Registering...' : 'Register now'}
+                          {isSubmitting ? 'Registering...' : 'Login now'}
                         </button>
                       </div>
                     </div>
