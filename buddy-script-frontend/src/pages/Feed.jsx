@@ -58,7 +58,7 @@ export default function Feed() {
           <div className='_layout_inner_wrap'>
             <div className='row'>
               <FeedLeftSidebar />
-              <FeedMiddle />
+              <FeedMiddle posts={posts} />
               <FeedRightSidebar />
             </div>
           </div>
