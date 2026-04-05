@@ -1,7 +1,14 @@
 import { useNavigate } from 'react-router-dom';
 import { logout } from '../../utils/auth';
+import UserAvatar from './UserAvatar';
 
-export default function ProfileDropdown({ open, displayName }) {
+export default function ProfileDropdown({
+  open,
+  displayName,
+  profileImage,
+  firstName,
+  lastName,
+}) {
   const navigate = useNavigate();
   const resolvedDisplayName = displayName || 'User';
 
@@ -16,9 +23,10 @@ export default function ProfileDropdown({ open, displayName }) {
     >
       <div className='_nav_profile_dropdown_info'>
         <div className='_nav_profile_dropdown_image'>
-          <img
-            src='/assets/images/profile.png'
-            alt='Image'
+          <UserAvatar
+            profileImage={profileImage}
+            firstName={firstName}
+            lastName={lastName}
             className='_nav_drop_img'
           />
         </div>

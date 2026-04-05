@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { authFetch, getStoredUser } from '../../utils/auth';
+import UserAvatar from './UserAvatar';
 
 export default function PostCard({ post }) {
   const currentUser = getStoredUser();
@@ -94,10 +95,14 @@ export default function PostCard({ post }) {
         <div className='_feed_inner_timeline_post_top'>
           <div className='_feed_inner_timeline_post_box'>
             <div className='_feed_inner_timeline_post_box_image'>
-              <img
-                src='/assets/images/post_img.png'
-                alt='User avatar'
+              <UserAvatar
+                profileImage={post.User?.profileImage}
+                firstName={post.User?.firstName}
+                lastName={post.User?.lastName}
                 className='_post_img'
+                initialsPadding='6px'
+                initialsFontSize='0.95em'
+                style={{ width: '35px', height: '35px' }}
               />
             </div>
             <div className='_feed_inner_timeline_post_box_txt'>

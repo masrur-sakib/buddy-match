@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import FeedNotificationPanel from './FeedNotificationPanel';
 import ProfileDropdown from './ProfileDropdown';
+import UserAvatar from './UserAvatar';
 import { getStoredUser } from '../../utils/auth';
 
 export default function FeedNavbar() {
@@ -13,6 +14,7 @@ export default function FeedNavbar() {
       .filter(Boolean)
       .join(' ')
       .trim() || 'User';
+  const profileImage = currentUser?.profileImage || null;
 
   return (
     <nav className='navbar navbar-expand-lg navbar-light _header_nav _padd_t10'>
@@ -179,10 +181,14 @@ export default function FeedNavbar() {
           </ul>
           <div className='_header_nav_profile'>
             <div className='_header_nav_profile_image'>
-              <img
-                src='/assets/images/profile.png'
-                alt='Image'
+              <UserAvatar
+                profileImage={profileImage}
+                firstName={currentUser?.firstName}
+                lastName={currentUser?.lastName}
                 className='_nav_profile_img'
+                initialsPadding='5px'
+                initialsFontSize='0.7em'
+                style={{ width: '28px', height: '28px' }}
               />
             </div>
             <div className='_header_nav_dropdown'>
@@ -207,7 +213,13 @@ export default function FeedNavbar() {
                 </svg>
               </button>
             </div>
-            <ProfileDropdown open={profileOpen} displayName={displayName} />
+            <ProfileDropdown
+              open={profileOpen}
+              displayName={displayName}
+              profileImage={profileImage}
+              firstName={currentUser?.firstName}
+              lastName={currentUser?.lastName}
+            />
           </div>
         </div>
       </div>

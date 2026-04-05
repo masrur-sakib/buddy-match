@@ -38,7 +38,7 @@ exports.getFeed = async (req, res) => {
         [Op.or]: [{ privacy: 'public' }, { UserId: req.user.id }],
       },
       include: [
-        { model: User, attributes: ['firstName', 'lastName'] },
+        { model: User, attributes: ['firstName', 'lastName', 'profileImage'] },
         {
           model: PostLike,
           include: [{ model: User, attributes: ['firstName', 'lastName'] }],
@@ -72,6 +72,20 @@ exports.getFeed = async (req, res) => {
               jsonPost.imageUrl = await getSignedImageUrl(storagePath);
             } catch (error) {
               jsonPost.imageUrl = null;
+            }
+          }
+        }
+
+        if (jsonPost.User?.profileImage) {
+          const profileStoragePath = getStorageFilePath(
+            jsonPost.User.profileImage,
+          );
+          if (profileStoragePath) {
+            try {
+              jsonPost.User.profileImage =
+                await getSignedImageUrl(profileStoragePath);
+            } catch (error) {
+              jsonPost.User.profileImage = null;
             }
           }
         }

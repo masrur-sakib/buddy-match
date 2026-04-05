@@ -847,7 +847,7 @@
 
 ._header_nav_profile_image {
   margin: 0 8px 0 0;
-  width: 24px;
+  width: 28px;
 }
 ._header_nav_dropdown {
   cursor: pointer;
@@ -1577,9 +1577,10 @@
   cursor: pointer;
 }
 ._txt_img {
-  max-width: 40px;
+  width: 35px;
+  height: 35px;
   border-radius: 50%;
-  padding: 1px;
+  padding: 0;
 }
 ._feed_inner_text_area {
   background: var(--bg2);

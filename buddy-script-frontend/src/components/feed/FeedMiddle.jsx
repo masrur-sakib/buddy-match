@@ -1,11 +1,14 @@
 import { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import PostCard from './PostCard';
+import UserAvatar from './UserAvatar';
+import { getStoredUser } from '../../utils/auth';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 export default function FeedMiddle({ posts = [], onPostCreated }) {
   const fileInputRef = useRef(null);
+  const currentUser = getStoredUser();
   const [content, setContent] = useState('');
   const [selectedFile, setSelectedFile] = useState(null);
   const [privacy, setPrivacy] = useState('public');
@@ -327,10 +330,14 @@ export default function FeedMiddle({ posts = [], onPostCreated }) {
             {/* Post Form Section */}
             <div className='_feed_inner_text_area_box'>
               <div className='_feed_inner_text_area_box_image'>
-                <img
-                  src='/assets/images/txt_img.png'
-                  alt='Image'
+                <UserAvatar
+                  profileImage={currentUser?.profileImage}
+                  firstName={currentUser?.firstName}
+                  lastName={currentUser?.lastName}
                   className='_txt_img'
+                  initialsPadding='6px'
+                  initialsFontSize='0.95em'
+                  style={{ width: '35px', height: '35px' }}
                 />
               </div>
               <div className='form-floating _feed_inner_text_area_box_form '>
