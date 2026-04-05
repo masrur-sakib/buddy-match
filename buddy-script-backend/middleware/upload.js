@@ -3,6 +3,9 @@ const multer = require('multer');
 require('dotenv').config();
 
 const bucketName = process.env.SUPABASE_BUCKET || 'post-images';
+const signedUrlExpiresIn = Number(
+  process.env.SUPABASE_SIGNED_URL_EXPIRES_IN || 60 * 60 * 24,
+);
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_KEY,
@@ -36,7 +39,7 @@ const getSignedImageUrl = async (storagePath) => {
 
   const { data, error } = await supabase.storage
     .from(bucketName)
-    .createSignedUrl(filePath, 60 * 60);
+    .createSignedUrl(filePath, signedUrlExpiresIn);
 
   if (error) throw error;
   return data.signedUrl;

@@ -2,19 +2,6 @@ export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 export const getAuthToken = () => localStorage.getItem('token');
 
-export const getStoredUser = () => {
-  try {
-    return JSON.parse(localStorage.getItem('user')) || null;
-  } catch {
-    return null;
-  }
-};
-
-export const logout = () => {
-  localStorage.removeItem('token');
-  localStorage.removeItem('user');
-};
-
 const decodeBase64Url = (value) => {
   try {
     const base64 = value.replace(/-/g, '+').replace(/_/g, '/');
@@ -28,6 +15,50 @@ const decodeBase64Url = (value) => {
   } catch {
     return null;
   }
+};
+
+const parseSignedUrlTokenPayload = (url) => {
+  try {
+    const parsed = new URL(url);
+    const token = parsed.searchParams.get('token');
+    if (!token) return null;
+
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+
+    return JSON.parse(decodeBase64Url(parts[1]));
+  } catch {
+    return null;
+  }
+};
+
+const isSignedImageUrlExpired = (url) => {
+  if (!url || typeof url !== 'string') return false;
+  const payload = parseSignedUrlTokenPayload(url);
+  if (!payload || typeof payload.exp !== 'number') return false;
+  return Date.now() >= payload.exp * 1000;
+};
+
+export const getStoredUser = () => {
+  try {
+    const user = JSON.parse(localStorage.getItem('user')) || null;
+    if (!user) return null;
+
+    if (isSignedImageUrlExpired(user.profileImage)) {
+      const normalizedUser = { ...user, profileImage: null };
+      localStorage.setItem('user', JSON.stringify(normalizedUser));
+      return normalizedUser;
+    }
+
+    return user;
+  } catch {
+    return null;
+  }
+};
+
+export const logout = () => {
+  localStorage.removeItem('token');
+  localStorage.removeItem('user');
 };
 
 export const parseJwt = (token) => {
