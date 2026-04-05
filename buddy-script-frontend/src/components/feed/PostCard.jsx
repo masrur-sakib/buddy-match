@@ -1,8 +1,15 @@
 import { useMemo, useRef, useState } from 'react';
-import { authFetch, getStoredUser } from '../../utils/auth';
+import { useDispatch } from 'react-redux';
+import { getStoredUser } from '../../utils/auth';
 import UserAvatar from './UserAvatar';
+import {
+  createComment,
+  toggleCommentLike,
+  togglePostLike,
+} from '../../store/feedSlice';
 
 export default function PostCard({ post }) {
+  const dispatch = useDispatch();
   const currentUser = getStoredUser();
   const createdAt = post.createdAt
     ? new Date(post.createdAt).toLocaleDateString('en-US', {
@@ -18,20 +25,19 @@ export default function PostCard({ post }) {
     ? `${post.User.firstName} ${post.User.lastName}`
     : 'Anonymous';
 
-  const [likes, setLikes] = useState(post.PostLikes ?? []);
   const [isLiking, setIsLiking] = useState(false);
   const [showLikesDrawer, setShowLikesDrawer] = useState(false);
   const [commentText, setCommentText] = useState('');
   const [isCommenting, setIsCommenting] = useState(false);
-  const [localCommentCount, setLocalCommentCount] = useState(
-    post.Comments?.length || 0,
-  );
-  const [commentLikes, setCommentLikes] = useState({});
   const [isTogglingCommentLike, setIsTogglingCommentLike] = useState({});
   const [activeCommentLikesDrawerId, setActiveCommentLikesDrawerId] =
     useState(null);
   const currentUserId = currentUser?.id ?? currentUser?.userId ?? null;
   const hiddenCommentSubmitRef = useRef(null);
+  const likes = post.PostLikes ?? [];
+  const comments = post.Comments ?? [];
+  const likeCount = likes.length;
+  const commentCount = comments.length;
 
   const handleOpenLikesDrawer = () => setShowLikesDrawer(true);
   const handleCloseLikesDrawer = () => setShowLikesDrawer(false);
@@ -53,20 +59,13 @@ export default function PostCard({ post }) {
     );
   }, [likes, currentUserId]);
 
-  const likeCount = likes.length;
-  const commentCount = localCommentCount;
-  const comments = post.Comments ?? [];
-
   const activeCommentLikes = useMemo(() => {
     if (!activeCommentLikesDrawerId) return [];
-    const localLikes = commentLikes[activeCommentLikesDrawerId];
-    if (localLikes !== undefined) return localLikes;
-
     const activeComment = comments.find(
       (comment) => comment.id === activeCommentLikesDrawerId,
     );
     return activeComment?.CommentLikes || [];
-  }, [activeCommentLikesDrawerId, commentLikes, comments]);
+  }, [activeCommentLikesDrawerId, comments]);
 
   const activeCommentLikedByNames = useMemo(() => {
     return activeCommentLikes
@@ -81,38 +80,7 @@ export default function PostCard({ post }) {
     if (isLiking) return;
     setIsLiking(true);
     try {
-      const response = await authFetch(`/api/posts/${post.id}/like`, {
-        method: 'POST',
-      });
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Unable to update like status');
-      }
-
-      setLikes((prev) => {
-        const alreadyLiked = prev.some(
-          (like) =>
-            like.UserId === currentUserId || like.User?.id === currentUserId,
-        );
-        if (alreadyLiked) {
-          return prev.filter(
-            (like) =>
-              like.UserId !== currentUserId && like.User?.id !== currentUserId,
-          );
-        }
-
-        return [
-          ...prev,
-          {
-            UserId: currentUserId,
-            User: {
-              id: currentUserId,
-              firstName: currentUser?.firstName || '',
-              lastName: currentUser?.lastName || '',
-            },
-          },
-        ];
-      });
+      await dispatch(togglePostLike(post.id)).unwrap();
     } catch (err) {
       console.error(err);
     } finally {
@@ -129,24 +97,9 @@ export default function PostCard({ post }) {
 
     setIsCommenting(true);
     try {
-      const response = await authFetch('/api/posts/comments', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          content,
-          postId: post.id,
-        }),
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Unable to create comment');
-      }
+      await dispatch(createComment({ content, postId: post.id })).unwrap();
 
       setCommentText('');
-      setLocalCommentCount((prev) => prev + 1);
     } catch (error) {
       console.error(error);
     } finally {
@@ -176,50 +129,7 @@ export default function PostCard({ post }) {
     if (isTogglingCommentLike[commentId]) return;
     setIsTogglingCommentLike((prev) => ({ ...prev, [commentId]: true }));
     try {
-      const response = await authFetch(
-        `/api/posts/comments/${commentId}/like`,
-        {
-          method: 'POST',
-        },
-      );
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Unable to update comment like status');
-      }
-
-      setCommentLikes((prev) => {
-        const likes =
-          prev[commentId] ||
-          (post.Comments.find((c) => c.id === commentId)?.CommentLikes ?? []);
-        const alreadyLiked = likes.some(
-          (like) =>
-            like.UserId === currentUserId || like.User?.id === currentUserId,
-        );
-        if (alreadyLiked) {
-          return {
-            ...prev,
-            [commentId]: likes.filter(
-              (like) =>
-                like.UserId !== currentUserId &&
-                like.User?.id !== currentUserId,
-            ),
-          };
-        }
-        return {
-          ...prev,
-          [commentId]: [
-            ...likes,
-            {
-              UserId: currentUserId,
-              User: {
-                id: currentUserId,
-                firstName: currentUser?.firstName || '',
-                lastName: currentUser?.lastName || '',
-              },
-            },
-          ],
-        };
-      });
+      await dispatch(toggleCommentLike(commentId)).unwrap();
     } catch (err) {
       console.error(err);
     } finally {
@@ -837,10 +747,7 @@ export default function PostCard({ post }) {
           const commentAuthor =
             `${comment.User?.firstName || ''} ${comment.User?.lastName || ''}`.trim() ||
             'User';
-          const localLikes =
-            commentLikes[comment.id] !== undefined
-              ? commentLikes[comment.id]
-              : comment.CommentLikes || [];
+          const localLikes = comment.CommentLikes || [];
           const commentLikeCount = localLikes.length;
           const isCommentLikedByMe = localLikes.some(
             (like) =>

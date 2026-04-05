@@ -1,12 +1,13 @@
 import { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 import PostCard from './PostCard';
 import UserAvatar from './UserAvatar';
 import { getStoredUser } from '../../utils/auth';
+import { createPost } from '../../store/feedSlice';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-
-export default function FeedMiddle({ posts = [], onPostCreated }) {
+export default function FeedMiddle({ posts = [] }) {
+  const dispatch = useDispatch();
   const fileInputRef = useRef(null);
   const currentUser = getStoredUser();
   const [content, setContent] = useState('');
@@ -39,35 +40,18 @@ export default function FeedMiddle({ posts = [], onPostCreated }) {
 
     try {
       setIsSubmitting(true);
-      const formData = new FormData();
-      formData.append('content', content);
-      formData.append('privacy', privacy);
-      if (selectedFile) {
-        formData.append('image', selectedFile);
-      }
-
-      const response = await fetch(`${API_URL}/api/posts`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: formData,
-      });
-
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to create post');
-      }
+      await dispatch(
+        createPost({
+          content: content.trim(),
+          privacy,
+          file: selectedFile,
+        }),
+      ).unwrap();
 
       setSuccess('Post created successfully!');
       setContent('');
       setSelectedFile(null);
       fileInputRef.current && (fileInputRef.current.value = '');
-
-      // Notify parent to refresh feed
-      if (onPostCreated) {
-        onPostCreated(data);
-      }
 
       setTimeout(() => setSuccess(''), 2000);
     } catch (err) {

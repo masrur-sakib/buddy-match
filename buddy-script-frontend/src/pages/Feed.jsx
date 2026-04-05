@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
-import { authFetch, getStoredUser, isAuthenticated } from '../utils/auth';
+import { useDispatch, useSelector } from 'react-redux';
+import { getStoredUser, isAuthenticated } from '../utils/auth';
 import DarkModeToggle from '../components/feed/DarkModeToggle';
 import FeedNavbar from '../components/feed/FeedNavbar';
 import FeedMobileHeader from '../components/feed/FeedMobileHeader';
@@ -8,27 +9,24 @@ import FeedMobileBottomNav from '../components/feed/FeedMobileBottomNav';
 import FeedLeftSidebar from '../components/feed/FeedLeftSidebar';
 import FeedMiddle from '../components/feed/FeedMiddle';
 import FeedRightSidebar from '../components/feed/FeedRightSidebar';
+import {
+  fetchFeed,
+  selectFeedError,
+  selectFeedLoading,
+  selectFeedPosts,
+} from '../store/feedSlice';
 
 export default function Feed() {
+  const dispatch = useDispatch();
   const [darkMode, setDarkMode] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [posts, setPosts] = useState([]);
+  const loading = useSelector(selectFeedLoading);
+  const error = useSelector(selectFeedError);
+  const posts = useSelector(selectFeedPosts);
   const [user] = useState(() => (isAuthenticated() ? getStoredUser() : null));
 
   useEffect(() => {
-    authFetch('/api/posts')
-      .then(async (res) => {
-        if (!res.ok) {
-          const data = await res.json();
-          throw new Error(data.error || 'Unable to load feed');
-        }
-        return res.json();
-      })
-      .then((data) => setPosts(data))
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
-  }, []);
+    dispatch(fetchFeed());
+  }, [dispatch]);
 
   if (!isAuthenticated()) {
     return <Navigate to='/login' replace />;
