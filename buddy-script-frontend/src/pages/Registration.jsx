@@ -13,6 +13,7 @@ export default function Registration() {
     password: '',
     confirmPassword: '',
   });
+  const [profileImage, setProfileImage] = useState(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -20,6 +21,11 @@ export default function Registration() {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files?.[0] || null;
+    setProfileImage(file);
   };
 
   const handleSubmit = async (e) => {
@@ -37,12 +43,18 @@ export default function Registration() {
 
     try {
       setIsSubmitting(true);
+      const payload = new FormData();
+      payload.append('firstName', firstName);
+      payload.append('lastName', lastName);
+      payload.append('email', email);
+      payload.append('password', password);
+      if (profileImage) {
+        payload.append('profileImage', profileImage);
+      }
+
       const response = await fetch(`${API_URL}/api/auth/register`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ firstName, lastName, email, password }),
+        body: payload,
       });
 
       const data = await response.json();
@@ -58,6 +70,7 @@ export default function Registration() {
         password: '',
         confirmPassword: '',
       });
+      setProfileImage(null);
       setTimeout(() => navigate('/login'), 1200);
     } catch (err) {
       setError(err.message);
@@ -188,6 +201,20 @@ export default function Registration() {
                           type='password'
                           className='form-control _social_registration_input'
                           placeholder='Repeat password'
+                        />
+                      </div>
+                    </div>
+                    <div className='col-xl-12 col-lg-12 col-md-12 col-sm-12'>
+                      <div className='_social_registration_form_input _mar_b14'>
+                        <label className='_social_registration_label _mar_b8'>
+                          Profile Image (optional)
+                        </label>
+                        <input
+                          name='profileImage'
+                          onChange={handleImageChange}
+                          type='file'
+                          accept='image/*'
+                          className='form-control _social_registration_input'
                         />
                       </div>
                     </div>

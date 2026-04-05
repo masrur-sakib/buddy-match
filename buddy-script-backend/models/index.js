@@ -4,21 +4,34 @@ const sequelize = require('../config/database');
 const User = sequelize.define('User', {
   firstName: { type: DataTypes.STRING, allowNull: false },
   lastName: { type: DataTypes.STRING, allowNull: false },
-  email: { type: DataTypes.STRING, unique: true, allowNull: false, validate: { isEmail: true } },
-  password: { type: DataTypes.STRING, allowNull: false }
+  email: {
+    type: DataTypes.STRING,
+    unique: true,
+    allowNull: false,
+    validate: { isEmail: true },
+  },
+  password: { type: DataTypes.STRING, allowNull: false },
+  profileImage: { type: DataTypes.STRING },
 });
 
-const Post = sequelize.define('Post', {
-  content: { type: DataTypes.TEXT, allowNull: false },
-  imageUrl: { type: DataTypes.STRING },
-  privacy: { type: DataTypes.ENUM('public', 'private'), defaultValue: 'public' }
-}, {
-  indexes: [{ fields: ['createdAt'] }] // For fast "newest first" sorting
-});
+const Post = sequelize.define(
+  'Post',
+  {
+    content: { type: DataTypes.TEXT, allowNull: false },
+    imageUrl: { type: DataTypes.STRING },
+    privacy: {
+      type: DataTypes.ENUM('public', 'private'),
+      defaultValue: 'public',
+    },
+  },
+  {
+    indexes: [{ fields: ['createdAt'] }], // For fast "newest first" sorting
+  },
+);
 
 const Comment = sequelize.define('Comment', {
   content: { type: DataTypes.TEXT, allowNull: false },
-  parentId: { type: DataTypes.INTEGER, allowNull: true } // For replies
+  parentId: { type: DataTypes.INTEGER, allowNull: true }, // For replies
 });
 
 const PostLike = sequelize.define('PostLike', {});
