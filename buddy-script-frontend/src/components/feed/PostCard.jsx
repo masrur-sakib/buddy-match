@@ -323,7 +323,14 @@ export default function PostCard({ post }) {
           </p>
         </div>
       </div>
-      <div className='_feed_inner_timeline_reaction'>
+      <div
+        className='_feed_inner_timeline_reaction'
+        style={{
+          display: 'flex',
+          height: '48px',
+          padding: '0',
+        }}
+      >
         <button
           className={`_feed_inner_timeline_reaction_emoji _feed_reaction ${
             isLikedByMe ? '_feed_reaction_active' : ''
@@ -331,12 +338,24 @@ export default function PostCard({ post }) {
           onClick={handleToggleLike}
           disabled={isLiking}
           type='button'
+          style={{
+            flex: 1,
+            borderRight: '1px solid rgba(0, 0, 0, 0.15)',
+            height: '100%',
+          }}
         >
           <span className='_feed_inner_timeline_reaction_link'>
             <span>{isLikedByMe ? 'Unlike' : 'Like'}</span>
           </span>
         </button>
-        <button className='_feed_inner_timeline_reaction_comment _feed_reaction'>
+        <button
+          className='_feed_inner_timeline_reaction_comment _feed_reaction'
+          style={{
+            flex: 1,
+            borderRight: '1px solid rgba(0, 0, 0, 0.15)',
+            height: '100%',
+          }}
+        >
           <span className='_feed_inner_timeline_reaction_link'>
             {' '}
             <span>
@@ -363,7 +382,13 @@ export default function PostCard({ post }) {
             </span>
           </span>
         </button>
-        <button className='_feed_inner_timeline_reaction_share _feed_reaction'>
+        <button
+          className='_feed_inner_timeline_reaction_share _feed_reaction'
+          style={{
+            flex: 1,
+            height: '100%',
+          }}
+        >
           <span className='_feed_inner_timeline_reaction_link'>
             {' '}
             <span>
