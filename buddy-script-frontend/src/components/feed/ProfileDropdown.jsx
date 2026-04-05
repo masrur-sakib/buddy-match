@@ -1,8 +1,9 @@
 import { useNavigate } from 'react-router-dom';
 import { logout } from '../../utils/auth';
 
-export default function ProfileDropdown({ open }) {
+export default function ProfileDropdown({ open, displayName }) {
   const navigate = useNavigate();
+  const resolvedDisplayName = displayName || 'User';
 
   const handleLogout = () => {
     logout();
@@ -22,7 +23,7 @@ export default function ProfileDropdown({ open }) {
           />
         </div>
         <div className='_nav_profile_dropdown_info_txt'>
-          <h4 className='_nav_dropdown_title'>Dylan Field</h4>
+          <h4 className='_nav_dropdown_title'>{resolvedDisplayName}</h4>
           <a href='#0' className='_nav_drop_profile'>
             View Profile
           </a>
