@@ -1,5 +1,9 @@
 const { Post, User, PostLike, Comment, CommentLike } = require('../models');
-const { uploadToSupabase } = require('../middleware/upload');
+const {
+  uploadToSupabase,
+  getSignedImageUrl,
+  getStorageFilePath,
+} = require('../middleware/upload');
 const { Op } = require('sequelize');
 
 exports.createPost = async (req, res) => {
@@ -53,7 +57,27 @@ exports.getFeed = async (req, res) => {
       ],
       order: [['createdAt', 'DESC']],
     });
-    res.json(posts);
+
+    const feed = await Promise.all(
+      posts.map(async (post) => {
+        const jsonPost = post.toJSON();
+
+        if (jsonPost.imageUrl) {
+          const storagePath = getStorageFilePath(jsonPost.imageUrl);
+          if (storagePath) {
+            try {
+              jsonPost.imageUrl = await getSignedImageUrl(storagePath);
+            } catch (error) {
+              jsonPost.imageUrl = null;
+            }
+          }
+        }
+
+        return jsonPost;
+      }),
+    );
+
+    res.json(feed);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
