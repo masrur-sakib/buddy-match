@@ -1,4 +1,8 @@
+import { useMemo, useState } from 'react';
+import { authFetch, getStoredUser } from '../../utils/auth';
+
 export default function PostCard({ post }) {
+  const currentUser = getStoredUser();
   const createdAt = post.createdAt
     ? new Date(post.createdAt).toLocaleDateString('en-US', {
         year: 'numeric',
@@ -13,8 +17,76 @@ export default function PostCard({ post }) {
     ? `${post.User.firstName} ${post.User.lastName}`
     : 'Anonymous';
 
-  //   const likeCount = post.PostLikes?.length || 0;
+  const [likes, setLikes] = useState(post.PostLikes ?? []);
+  const [isLiking, setIsLiking] = useState(false);
+  const [showLikesDrawer, setShowLikesDrawer] = useState(false);
+  const currentUserId = currentUser?.id ?? currentUser?.userId ?? null;
+
+  const handleOpenLikesDrawer = () => setShowLikesDrawer(true);
+  const handleCloseLikesDrawer = () => setShowLikesDrawer(false);
+
+  const likedByNames = useMemo(() => {
+    return likes
+      .map((like) => {
+        if (!like.User) return null;
+        return `${like.User.firstName || ''} ${like.User.lastName || ''}`.trim();
+      })
+      .filter(Boolean);
+  }, [likes]);
+
+  const isLikedByMe = useMemo(() => {
+    if (!currentUserId) return false;
+    return likes.some(
+      (like) =>
+        like.UserId === currentUserId || like.User?.id === currentUserId,
+    );
+  }, [likes, currentUserId]);
+
+  const likeCount = likes.length;
   const commentCount = post.Comments?.length || 0;
+
+  const handleToggleLike = async () => {
+    if (isLiking) return;
+    setIsLiking(true);
+    try {
+      const response = await authFetch(`/api/posts/${post.id}/like`, {
+        method: 'POST',
+      });
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Unable to update like status');
+      }
+
+      setLikes((prev) => {
+        const alreadyLiked = prev.some(
+          (like) =>
+            like.UserId === currentUserId || like.User?.id === currentUserId,
+        );
+        if (alreadyLiked) {
+          return prev.filter(
+            (like) =>
+              like.UserId !== currentUserId && like.User?.id !== currentUserId,
+          );
+        }
+
+        return [
+          ...prev,
+          {
+            UserId: currentUserId,
+            User: {
+              id: currentUserId,
+              firstName: currentUser?.firstName || '',
+              lastName: currentUser?.lastName || '',
+            },
+          },
+        ];
+      });
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsLiking(false);
+    }
+  };
 
   return (
     <div className='_feed_inner_timeline_post_area _b_radious6 _padd_b24 _padd_t24 _mar_b16'>
@@ -190,7 +262,19 @@ export default function PostCard({ post }) {
         )}
       </div>
       <div className='_feed_inner_timeline_total_reacts _padd_r24 _padd_l24 _mar_b26'>
-        <div className='_feed_inner_timeline_total_reacts_image'>
+        <div
+          className='_feed_inner_timeline_total_reacts_image'
+          onClick={handleOpenLikesDrawer}
+          role='button'
+          tabIndex={0}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault();
+              handleOpenLikesDrawer();
+            }
+          }}
+          style={{ cursor: 'pointer' }}
+        >
           <img
             src='/assets/images/react_img1.png'
             alt='Image'
@@ -219,45 +303,37 @@ export default function PostCard({ post }) {
           <p className='_feed_inner_timeline_total_reacts_para'>9+</p>
         </div>
         <div className='_feed_inner_timeline_total_reacts_txt'>
-          <p className='_feed_inner_timeline_total_reacts_para1'>
-            <span>{commentCount}</span> Comment
+          <p
+            className='_feed_inner_timeline_total_reacts_para1'
+            onClick={handleOpenLikesDrawer}
+            role='button'
+            tabIndex={0}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                handleOpenLikesDrawer();
+              }
+            }}
+            style={{ cursor: 'pointer' }}
+          >
+            <span>{likeCount}</span> Like{likeCount !== 1 ? 's' : ''}
           </p>
-          <p className='_feed_inner_timeline_total_reacts_para2'>
-            <span>122</span> Share
+          <p className='_feed_inner_timeline_total_reacts_para1'>
+            <span>{commentCount}</span> Comment{commentCount !== 1 ? 's' : ''}
           </p>
         </div>
       </div>
       <div className='_feed_inner_timeline_reaction'>
-        <button className='_feed_inner_timeline_reaction_emoji _feed_reaction _feed_reaction_active'>
+        <button
+          className={`_feed_inner_timeline_reaction_emoji _feed_reaction ${
+            isLikedByMe ? '_feed_reaction_active' : ''
+          }`}
+          onClick={handleToggleLike}
+          disabled={isLiking}
+          type='button'
+        >
           <span className='_feed_inner_timeline_reaction_link'>
-            {' '}
-            <span>
-              <svg
-                xmlns='http://www.w3.org/2000/svg'
-                width='19'
-                height='19'
-                fill='none'
-                viewBox='0 0 19 19'
-              >
-                <path
-                  fill='#FFCC4D'
-                  d='M9.5 19a9.5 9.5 0 100-19 9.5 9.5 0 000 19z'
-                ></path>
-                <path
-                  fill='#664500'
-                  d='M9.5 11.083c-1.912 0-3.181-.222-4.75-.527-.358-.07-1.056 0-1.056 1.055 0 2.111 2.425 4.75 5.806 4.75 3.38 0 5.805-2.639 5.805-4.75 0-1.055-.697-1.125-1.055-1.055-1.57.305-2.838.527-4.75.527z'
-                ></path>
-                <path
-                  fill='#fff'
-                  d='M4.75 11.611s1.583.528 4.75.528 4.75-.528 4.75-.528-1.056 2.111-4.75 2.111-4.75-2.11-4.75-2.11z'
-                ></path>
-                <path
-                  fill='#664500'
-                  d='M6.333 8.972c.729 0 1.32-.827 1.32-1.847s-.591-1.847-1.32-1.847c-.729 0-1.32.827-1.32 1.847s.591 1.847 1.32 1.847zM12.667 8.972c.729 0 1.32-.827 1.32-1.847s-.591-1.847-1.32-1.847c-.729 0-1.32.827-1.32 1.847s.591 1.847 1.32 1.847z'
-                ></path>
-              </svg>
-              Haha
-            </span>
+            <span>{isLikedByMe ? 'Unlike' : 'Like'}</span>
           </span>
         </button>
         <button className='_feed_inner_timeline_reaction_comment _feed_reaction'>
@@ -310,6 +386,88 @@ export default function PostCard({ post }) {
           </span>
         </button>
       </div>
+      {showLikesDrawer && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 1000,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: 'rgba(0, 0, 0, 0.35)',
+            padding: '16px',
+          }}
+        >
+          <div
+            onClick={handleCloseLikesDrawer}
+            style={{ position: 'absolute', inset: 0 }}
+          />
+          <div
+            style={{
+              position: 'relative',
+              width: '100%',
+              maxWidth: '520px',
+              maxHeight: '70%',
+              background: '#fff',
+              borderRadius: '18px',
+              boxShadow: '0 18px 36px rgba(0,0,0,0.18)',
+              overflowY: 'auto',
+              padding: '20px',
+              zIndex: 1001,
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '16px',
+              }}
+            >
+              <h3 style={{ margin: 0, fontSize: '1rem' }}>
+                {likeCount} Like{likeCount !== 1 ? 's' : ''}
+              </h3>
+              <button
+                type='button'
+                onClick={handleCloseLikesDrawer}
+                style={{
+                  border: 'none',
+                  background: 'transparent',
+                  fontSize: '1.4rem',
+                  lineHeight: 1,
+                  cursor: 'pointer',
+                }}
+                aria-label='Close likes drawer'
+              >
+                ×
+              </button>
+            </div>
+            <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
+              {likedByNames.length ? (
+                likedByNames.map((name, index) => (
+                  <li
+                    key={`${name}-${index}`}
+                    style={{
+                      padding: '12px 0',
+                      borderBottom:
+                        index !== likedByNames.length - 1
+                          ? '1px solid rgba(0,0,0,0.08)'
+                          : 'none',
+                    }}
+                  >
+                    {name}
+                  </li>
+                ))
+              ) : (
+                <li style={{ padding: '12px 0', color: '#666' }}>
+                  No likes yet.
+                </li>
+              )}
+            </ul>
+          </div>
+        </div>
+      )}
       <div className='_feed_inner_timeline_cooment_area'>
         <div className='_feed_inner_comment_box'>
           <form className='_feed_inner_comment_box_form'>
