@@ -12,7 +12,9 @@ const upload = multer({ storage: multer.memoryStorage() });
 const getStorageFilePath = (value) => {
   if (!value || typeof value !== 'string') return null;
   if (value.startsWith('http')) {
-    const match = value.match(/\/storage\/v1\/object\/(?:public|private)\/[^/]+\/(.+)$/);
+    const match = value.match(
+      /\/storage\/v1\/object\/(?:public|private)\/[^/]+\/(.+)$/,
+    );
     return match ? decodeURIComponent(match[1]) : null;
   }
   return value;
@@ -40,5 +42,9 @@ const getSignedImageUrl = async (storagePath) => {
   return data.signedUrl;
 };
 
-module.exports = { upload, uploadToSupabase, getSignedImageUrl, getStorageFilePath };
-
+module.exports = {
+  upload,
+  uploadToSupabase,
+  getSignedImageUrl,
+  getStorageFilePath,
+};

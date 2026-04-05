@@ -6,9 +6,12 @@ const {
 } = require('../middleware/upload');
 const { Op } = require('sequelize');
 
+const canAccessPost = (post, userId) =>
+  post.privacy === 'public' || post.UserId === userId;
+
 exports.createPost = async (req, res) => {
   try {
-    const { content, privacy } = req.body;
+    const { content, privacy = 'public' } = req.body;
     let imageUrl = null;
 
     if (req.file) {
@@ -84,24 +87,40 @@ exports.getFeed = async (req, res) => {
 };
 
 exports.toggleLike = async (req, res) => {
-  const { postId } = req.params;
-  const userId = req.user.id;
+  try {
+    const { postId } = req.params;
+    const userId = req.user.id;
 
-  const existingLike = await PostLike.findOne({
-    where: { PostId: postId, UserId: userId },
-  });
-  if (existingLike) {
-    await existingLike.destroy();
-    return res.json({ message: 'Unliked' });
+    const post = await Post.findByPk(postId);
+    if (!post) return res.status(404).json({ error: 'Post not found' });
+    if (!canAccessPost(post, userId)) {
+      return res.status(403).json({ error: 'You cannot like this post' });
+    }
+
+    const existingLike = await PostLike.findOne({
+      where: { PostId: postId, UserId: userId },
+    });
+    if (existingLike) {
+      await existingLike.destroy();
+      return res.json({ message: 'Unliked' });
+    }
+    await PostLike.create({ PostId: postId, UserId: userId });
+    res.json({ message: 'Liked' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
-  await PostLike.create({ PostId: postId, UserId: userId });
-  res.json({ message: 'Liked' });
 };
 
 // Handles both top-level comments and replies
 exports.createComment = async (req, res) => {
   try {
     const { content, postId, parentId } = req.body; // parentId is used for replies
+    const post = await Post.findByPk(postId);
+    if (!post) return res.status(404).json({ error: 'Post not found' });
+    if (!canAccessPost(post, req.user.id)) {
+      return res.status(403).json({ error: 'You cannot comment on this post' });
+    }
+
     const comment = await Comment.create({
       content,
       PostId: postId,
@@ -119,6 +138,14 @@ exports.toggleCommentLike = async (req, res) => {
   try {
     const { commentId } = req.params;
     const userId = req.user.id;
+
+    const comment = await Comment.findByPk(commentId, {
+      include: [{ model: Post }],
+    });
+    if (!comment) return res.status(404).json({ error: 'Comment not found' });
+    if (!canAccessPost(comment.Post, userId)) {
+      return res.status(403).json({ error: 'You cannot like this comment' });
+    }
 
     const existingLike = await CommentLike.findOne({
       where: { CommentId: commentId, UserId: userId },
