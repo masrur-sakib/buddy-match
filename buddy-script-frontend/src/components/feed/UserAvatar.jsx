@@ -50,7 +50,7 @@ export default function UserAvatar({
         alignItems: 'center',
         justifyContent: 'center',
         boxSizing: 'border-box',
-        background: 'linear-gradient(135deg, #9CA3AF 0%, #6B7280 100%)',
+        background: 'linear-gradient(135deg, #0077b6 0%, #023e7d 100%)',
         color: '#fff',
         fontWeight: 600,
         fontSize: initialsFontSize,

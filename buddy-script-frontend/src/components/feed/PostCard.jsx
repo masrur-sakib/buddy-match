@@ -523,10 +523,12 @@ export default function PostCard({ post }) {
           <form className='_feed_inner_comment_box_form'>
             <div className='_feed_inner_comment_box_content'>
               <div className='_feed_inner_comment_box_content_image'>
-                <img
-                  src='/assets/images/comment_img.png'
-                  alt=''
+                <UserAvatar
+                  profileImage={currentUser?.profileImage}
+                  firstName={currentUser?.firstName}
+                  lastName={currentUser?.lastName}
                   className='_comment_img'
+                  initialsPadding='4px'
                 />
               </div>
               <div className='_feed_inner_comment_box_content_txt'>
@@ -670,10 +672,12 @@ export default function PostCard({ post }) {
               <form className='_feed_inner_comment_box_form'>
                 <div className='_feed_inner_comment_box_content'>
                   <div className='_feed_inner_comment_box_content_image'>
-                    <img
-                      src='/assets/images/comment_img.png'
-                      alt=''
+                    <UserAvatar
+                      profileImage={currentUser?.profileImage}
+                      firstName={currentUser?.firstName}
+                      lastName={currentUser?.lastName}
                       className='_comment_img'
+                      initialsPadding='4px'
                     />
                   </div>
                   <div className='_feed_inner_comment_box_content_txt'>
