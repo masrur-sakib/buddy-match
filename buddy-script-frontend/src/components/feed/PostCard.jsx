@@ -28,6 +28,8 @@ export default function PostCard({ post }) {
   );
   const [commentLikes, setCommentLikes] = useState({});
   const [isTogglingCommentLike, setIsTogglingCommentLike] = useState({});
+  const [activeCommentLikesDrawerId, setActiveCommentLikesDrawerId] =
+    useState(null);
   const currentUserId = currentUser?.id ?? currentUser?.userId ?? null;
   const hiddenCommentSubmitRef = useRef(null);
 
@@ -54,6 +56,26 @@ export default function PostCard({ post }) {
   const likeCount = likes.length;
   const commentCount = localCommentCount;
   const comments = post.Comments ?? [];
+
+  const activeCommentLikes = useMemo(() => {
+    if (!activeCommentLikesDrawerId) return [];
+    const localLikes = commentLikes[activeCommentLikesDrawerId];
+    if (localLikes !== undefined) return localLikes;
+
+    const activeComment = comments.find(
+      (comment) => comment.id === activeCommentLikesDrawerId,
+    );
+    return activeComment?.CommentLikes || [];
+  }, [activeCommentLikesDrawerId, commentLikes, comments]);
+
+  const activeCommentLikedByNames = useMemo(() => {
+    return activeCommentLikes
+      .map((like) => {
+        if (!like.User) return null;
+        return `${like.User.firstName || ''} ${like.User.lastName || ''}`.trim();
+      })
+      .filter(Boolean);
+  }, [activeCommentLikes]);
 
   const handleToggleLike = async () => {
     if (isLiking) return;
@@ -140,6 +162,14 @@ export default function PostCard({ post }) {
 
     event.preventDefault();
     hiddenCommentSubmitRef.current?.click();
+  };
+
+  const handleOpenCommentLikesDrawer = (commentId) => {
+    setActiveCommentLikesDrawerId(commentId);
+  };
+
+  const handleCloseCommentLikesDrawer = () => {
+    setActiveCommentLikesDrawerId(null);
   };
 
   const handleToggleCommentLike = async (commentId) => {
@@ -626,6 +656,90 @@ export default function PostCard({ post }) {
           </div>
         </div>
       )}
+      {/* Comment Likes Drawer */}
+      {activeCommentLikesDrawerId && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 1000,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: 'rgba(0, 0, 0, 0.35)',
+            padding: '16px',
+          }}
+        >
+          <div
+            onClick={handleCloseCommentLikesDrawer}
+            style={{ position: 'absolute', inset: 0 }}
+          />
+          <div
+            style={{
+              position: 'relative',
+              width: '100%',
+              maxWidth: '520px',
+              maxHeight: '70%',
+              background: '#fff',
+              borderRadius: '18px',
+              boxShadow: '0 18px 36px rgba(0,0,0,0.18)',
+              overflowY: 'auto',
+              padding: '20px',
+              zIndex: 1001,
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '16px',
+              }}
+            >
+              <h3 style={{ margin: 0, fontSize: '1rem' }}>
+                {activeCommentLikes.length} Like
+                {activeCommentLikes.length !== 1 ? 's' : ''}
+              </h3>
+              <button
+                type='button'
+                onClick={handleCloseCommentLikesDrawer}
+                style={{
+                  border: 'none',
+                  background: 'transparent',
+                  fontSize: '1.4rem',
+                  lineHeight: 1,
+                  cursor: 'pointer',
+                }}
+                aria-label='Close comment likes drawer'
+              >
+                ×
+              </button>
+            </div>
+            <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
+              {activeCommentLikedByNames.length ? (
+                activeCommentLikedByNames.map((name, index) => (
+                  <li
+                    key={`${name}-${index}`}
+                    style={{
+                      padding: '12px 0',
+                      borderBottom:
+                        index !== activeCommentLikedByNames.length - 1
+                          ? '1px solid rgba(0,0,0,0.08)'
+                          : 'none',
+                    }}
+                  >
+                    {name}
+                  </li>
+                ))
+              ) : (
+                <li style={{ padding: '12px 0', color: '#666' }}>
+                  No likes yet.
+                </li>
+              )}
+            </ul>
+          </div>
+        </div>
+      )}
       <div
         className='_feed_inner_timeline_cooment_area'
         style={{ marginLeft: '-8px' }}
@@ -768,7 +882,19 @@ export default function PostCard({ post }) {
                       <span>{comment.content}</span>
                     </p>
                   </div>
-                  <div className='_total_reactions' style={{ right: '-20px' }}>
+                  <div
+                    className='_total_reactions'
+                    style={{ right: '-20px', cursor: 'pointer' }}
+                    onClick={() => handleOpenCommentLikesDrawer(comment.id)}
+                    role='button'
+                    tabIndex={0}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        handleOpenCommentLikesDrawer(comment.id);
+                      }
+                    }}
+                  >
                     <div className='_total_react'>
                       <span className='_reaction_like'>
                         <svg
