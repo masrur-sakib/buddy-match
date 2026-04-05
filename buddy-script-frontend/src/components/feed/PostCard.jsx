@@ -26,6 +26,8 @@ export default function PostCard({ post }) {
   const [localCommentCount, setLocalCommentCount] = useState(
     post.Comments?.length || 0,
   );
+  const [commentLikes, setCommentLikes] = useState({});
+  const [isTogglingCommentLike, setIsTogglingCommentLike] = useState({});
   const currentUserId = currentUser?.id ?? currentUser?.userId ?? null;
   const hiddenCommentSubmitRef = useRef(null);
 
@@ -138,6 +140,61 @@ export default function PostCard({ post }) {
 
     event.preventDefault();
     hiddenCommentSubmitRef.current?.click();
+  };
+
+  const handleToggleCommentLike = async (commentId) => {
+    if (isTogglingCommentLike[commentId]) return;
+    setIsTogglingCommentLike((prev) => ({ ...prev, [commentId]: true }));
+    try {
+      const response = await authFetch(
+        `/api/posts/comments/${commentId}/like`,
+        {
+          method: 'POST',
+        },
+      );
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Unable to update comment like status');
+      }
+
+      setCommentLikes((prev) => {
+        const likes =
+          prev[commentId] ||
+          (post.Comments.find((c) => c.id === commentId)?.CommentLikes ?? []);
+        const alreadyLiked = likes.some(
+          (like) =>
+            like.UserId === currentUserId || like.User?.id === currentUserId,
+        );
+        if (alreadyLiked) {
+          return {
+            ...prev,
+            [commentId]: likes.filter(
+              (like) =>
+                like.UserId !== currentUserId &&
+                like.User?.id !== currentUserId,
+            ),
+          };
+        }
+        return {
+          ...prev,
+          [commentId]: [
+            ...likes,
+            {
+              UserId: currentUserId,
+              User: {
+                id: currentUserId,
+                firstName: currentUser?.firstName || '',
+                lastName: currentUser?.lastName || '',
+              },
+            },
+          ],
+        };
+      });
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsTogglingCommentLike((prev) => ({ ...prev, [commentId]: false }));
+    }
   };
 
   return (
@@ -601,6 +658,7 @@ export default function PostCard({ post }) {
               </div>
             </div>
             <div className='_feed_inner_comment_box_icon'>
+              {/* Comment Mic Button */}
               <button
                 className='_feed_inner_comment_box_icon_btn'
                 type='button'
@@ -621,6 +679,7 @@ export default function PostCard({ post }) {
                   />
                 </svg>
               </button>
+              {/* Comment Image Upload Button */}
               <button
                 className='_feed_inner_comment_box_icon_btn'
                 type='button'
@@ -641,6 +700,7 @@ export default function PostCard({ post }) {
                   />
                 </svg>
               </button>
+              {/* Comment Post Button */}
               <button
                 ref={hiddenCommentSubmitRef}
                 type='submit'
@@ -663,8 +723,15 @@ export default function PostCard({ post }) {
           const commentAuthor =
             `${comment.User?.firstName || ''} ${comment.User?.lastName || ''}`.trim() ||
             'User';
-          const commentLikeCount =
-            comment.CommentLikes?.length || comment.CommentLike?.length || 0;
+          const localLikes =
+            commentLikes[comment.id] !== undefined
+              ? commentLikes[comment.id]
+              : comment.CommentLikes || [];
+          const commentLikeCount = localLikes.length;
+          const isCommentLikedByMe = localLikes.some(
+            (like) =>
+              like.UserId === currentUserId || like.User?.id === currentUserId,
+          );
           const commentTime = comment.createdAt
             ? new Date(comment.createdAt).toLocaleDateString('en-US', {
                 month: 'short',
@@ -729,7 +796,23 @@ export default function PostCard({ post }) {
                         style={{ flexWrap: 'nowrap' }}
                       >
                         <li>
-                          <span>Like.</span>
+                          <span
+                            onClick={() => handleToggleCommentLike(comment.id)}
+                            style={{
+                              cursor: 'pointer',
+                              color: isCommentLikedByMe ? '#1890FF' : 'inherit',
+                            }}
+                            role='button'
+                            tabIndex={0}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                handleToggleCommentLike(comment.id);
+                              }
+                            }}
+                          >
+                            {isCommentLikedByMe ? 'Unlike' : 'Like'}.
+                          </span>
                         </li>
                         <li>
                           <span>Reply.</span>
