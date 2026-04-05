@@ -1,12 +1,11 @@
 import { useNavigate } from 'react-router-dom';
+import { logout } from '../../utils/auth';
 
 export default function ProfileDropdown({ open }) {
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    console.log('Logout clicked');
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    logout();
     navigate('/login', { replace: true });
   };
   return (
