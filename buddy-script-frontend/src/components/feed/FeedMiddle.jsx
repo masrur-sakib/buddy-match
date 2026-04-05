@@ -1,13 +1,19 @@
 import { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import PostCard from './PostCard';
 import UserAvatar from './UserAvatar';
 import { getStoredUser } from '../../utils/auth';
-import { createPost } from '../../store/feedSlice';
+import {
+  createPost,
+  selectFeedError,
+  selectFeedLoading,
+} from '../../store/feedSlice';
 
 export default function FeedMiddle({ posts = [] }) {
   const dispatch = useDispatch();
+  const loading = useSelector(selectFeedLoading);
+  const feedError = useSelector(selectFeedError);
   const fileInputRef = useRef(null);
   const currentUser = getStoredUser();
   const [content, setContent] = useState('');
@@ -624,7 +630,21 @@ export default function FeedMiddle({ posts = [] }) {
 
           {/* Post Cards Section */}
           <div>
-            {posts && posts.length > 0 ? (
+            {loading ? (
+              <div className='d-flex justify-content-center align-items-center py-5'>
+                <div
+                  className='spinner-border text-primary'
+                  role='status'
+                  aria-label='Loading posts'
+                >
+                  <span className='visually-hidden'>Loading...</span>
+                </div>
+              </div>
+            ) : feedError ? (
+              <div className='alert alert-danger mt-3'>
+                <p className='mb-0'>{feedError}</p>
+              </div>
+            ) : posts && posts.length > 0 ? (
               posts.map((post) => <PostCard key={post.id} post={post} />)
             ) : (
               <div className='alert alert-info mt-3'>
