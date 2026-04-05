@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { authFetch, getStoredUser } from '../../utils/auth';
 import UserAvatar from './UserAvatar';
 
@@ -21,7 +21,13 @@ export default function PostCard({ post }) {
   const [likes, setLikes] = useState(post.PostLikes ?? []);
   const [isLiking, setIsLiking] = useState(false);
   const [showLikesDrawer, setShowLikesDrawer] = useState(false);
+  const [commentText, setCommentText] = useState('');
+  const [isCommenting, setIsCommenting] = useState(false);
+  const [localCommentCount, setLocalCommentCount] = useState(
+    post.Comments?.length || 0,
+  );
   const currentUserId = currentUser?.id ?? currentUser?.userId ?? null;
+  const hiddenCommentSubmitRef = useRef(null);
 
   const handleOpenLikesDrawer = () => setShowLikesDrawer(true);
   const handleCloseLikesDrawer = () => setShowLikesDrawer(false);
@@ -44,7 +50,7 @@ export default function PostCard({ post }) {
   }, [likes, currentUserId]);
 
   const likeCount = likes.length;
-  const commentCount = post.Comments?.length || 0;
+  const commentCount = localCommentCount;
 
   const handleToggleLike = async () => {
     if (isLiking) return;
@@ -87,6 +93,50 @@ export default function PostCard({ post }) {
     } finally {
       setIsLiking(false);
     }
+  };
+
+  const handleCreateComment = async (event) => {
+    event.preventDefault();
+    if (isCommenting) return;
+
+    const content = commentText.trim();
+    if (!content) return;
+
+    setIsCommenting(true);
+    try {
+      const response = await authFetch('/api/posts/comments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          content,
+          postId: post.id,
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Unable to create comment');
+      }
+
+      setCommentText('');
+      setLocalCommentCount((prev) => prev + 1);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsCommenting(false);
+    }
+  };
+
+  const handleCommentKeyDown = (event) => {
+    if (event.key !== 'Enter' || event.shiftKey) return;
+
+    const content = commentText.trim();
+    if (!content || isCommenting) return;
+
+    event.preventDefault();
+    hiddenCommentSubmitRef.current?.click();
   };
 
   return (
@@ -520,7 +570,10 @@ export default function PostCard({ post }) {
       )}
       <div className='_feed_inner_timeline_cooment_area'>
         <div className='_feed_inner_comment_box'>
-          <form className='_feed_inner_comment_box_form'>
+          <form
+            className='_feed_inner_comment_box_form'
+            onSubmit={handleCreateComment}
+          >
             <div className='_feed_inner_comment_box_content'>
               <div className='_feed_inner_comment_box_content_image'>
                 <UserAvatar
@@ -536,11 +589,17 @@ export default function PostCard({ post }) {
                   className='form-control _comment_textarea'
                   placeholder='Write a comment'
                   id='floatingTextarea1'
+                  value={commentText}
+                  onChange={(event) => setCommentText(event.target.value)}
+                  onKeyDown={handleCommentKeyDown}
                 ></textarea>
               </div>
             </div>
             <div className='_feed_inner_comment_box_icon'>
-              <button className='_feed_inner_comment_box_icon_btn'>
+              <button
+                className='_feed_inner_comment_box_icon_btn'
+                type='button'
+              >
                 <svg
                   xmlns='http://www.w3.org/2000/svg'
                   width='16'
@@ -557,7 +616,10 @@ export default function PostCard({ post }) {
                   />
                 </svg>
               </button>
-              <button className='_feed_inner_comment_box_icon_btn'>
+              <button
+                className='_feed_inner_comment_box_icon_btn'
+                type='button'
+              >
                 <svg
                   xmlns='http://www.w3.org/2000/svg'
                   width='16'
@@ -574,6 +636,14 @@ export default function PostCard({ post }) {
                   />
                 </svg>
               </button>
+              <button
+                ref={hiddenCommentSubmitRef}
+                type='submit'
+                disabled={isCommenting}
+                style={{ display: 'none' }}
+                aria-hidden='true'
+                tabIndex={-1}
+              />
             </div>
           </form>
         </div>
