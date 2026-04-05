@@ -227,13 +227,13 @@ export default function Registration() {
                   </div>
                   <div className='row'>
                     <div className='col-lg-12 col-md-12 col-xl-12 col-sm-12'>
-                      <div className='_social_registration_form_btn _mar_t40 _mar_b60'>
+                      <div className='_login_registration_btn_section _social_registration_form_btn _mar_t40 _mar_b60'>
                         <button
                           type='submit'
                           className='_social_registration_form_btn_link _btn1'
                           disabled={isSubmitting}
                         >
-                          {isSubmitting ? 'Registering...' : 'Login now'}
+                          {isSubmitting ? 'Registering...' : 'Register'}
                         </button>
                       </div>
                     </div>

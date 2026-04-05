@@ -240,7 +240,7 @@ ul {
 /*Button*/
 
 ._btn1 {
-    padding: 12px 116px;
+    padding: 12px 80px;
     background: var(--color5);
     border: 1px solid transparent;
     border-radius: 6px;
@@ -283,6 +283,12 @@ ul {
 }
 
 ._btn4:hover {}
+
+._login_registration_btn_section {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
 
 
 /* Display */
