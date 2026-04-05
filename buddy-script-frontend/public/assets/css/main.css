@@ -1980,7 +1980,7 @@
   flex-wrap: wrap;
 }
 ._comment_img {
-  max-width: 26px;
+  /* max-width: 30px; */
 }
 ._feed_inner_comment_box_content {
   display: -webkit-box;

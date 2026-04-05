@@ -569,7 +569,10 @@ export default function PostCard({ post }) {
           </div>
         </div>
       )}
-      <div className='_feed_inner_timeline_cooment_area'>
+      <div
+        className='_feed_inner_timeline_cooment_area'
+        style={{ marginLeft: '-8px' }}
+      >
         <div className='_feed_inner_comment_box'>
           <form
             className='_feed_inner_comment_box_form'
@@ -582,7 +585,8 @@ export default function PostCard({ post }) {
                   firstName={currentUser?.firstName}
                   lastName={currentUser?.lastName}
                   className='_comment_img'
-                  initialsPadding='4px'
+                  initialsPadding='6px'
+                  style={{ width: '38px', height: '38px' }}
                 />
               </div>
               <div className='_feed_inner_comment_box_content_txt'>
