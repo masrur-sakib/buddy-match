@@ -48,12 +48,20 @@ exports.getFeed = async (req, res) => {
           where: { parentId: null }, // Fetch only top-level comments
           required: false,
           include: [
-            { model: User, attributes: ['firstName'] },
+            {
+              model: User,
+              attributes: ['firstName', 'lastName', 'profileImage'],
+            },
             { model: CommentLike },
             {
               model: Comment,
               as: 'replies',
-              include: [{ model: User, attributes: ['firstName'] }],
+              include: [
+                {
+                  model: User,
+                  attributes: ['firstName', 'lastName', 'profileImage'],
+                },
+              ],
             },
           ],
         },
@@ -86,6 +94,44 @@ exports.getFeed = async (req, res) => {
                 await getSignedImageUrl(profileStoragePath);
             } catch (error) {
               jsonPost.User.profileImage = null;
+            }
+          }
+        }
+
+        if (Array.isArray(jsonPost.Comments)) {
+          for (const comment of jsonPost.Comments) {
+            if (comment.User?.profileImage) {
+              const commentProfileStoragePath = getStorageFilePath(
+                comment.User.profileImage,
+              );
+              if (commentProfileStoragePath) {
+                try {
+                  comment.User.profileImage = await getSignedImageUrl(
+                    commentProfileStoragePath,
+                  );
+                } catch (error) {
+                  comment.User.profileImage = null;
+                }
+              }
+            }
+
+            if (Array.isArray(comment.replies)) {
+              for (const reply of comment.replies) {
+                if (reply.User?.profileImage) {
+                  const replyProfileStoragePath = getStorageFilePath(
+                    reply.User.profileImage,
+                  );
+                  if (replyProfileStoragePath) {
+                    try {
+                      reply.User.profileImage = await getSignedImageUrl(
+                        replyProfileStoragePath,
+                      );
+                    } catch (error) {
+                      reply.User.profileImage = null;
+                    }
+                  }
+                }
+              }
             }
           }
         }
