@@ -850,6 +850,7 @@ export default function PostCard({ post }) {
                     firstName={comment.User?.firstName}
                     lastName={comment.User?.lastName}
                     className='_comment_img1'
+                    style={{ width: '40px', height: '40px', flexShrink: 0 }}
                   />
                 </a>
               </div>

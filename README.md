@@ -216,7 +216,7 @@ Base URL: `/api`
 - `POST /posts/comments` — create comment (`content`, `postId`, optional `parentId` for reply)
 - `POST /posts/comments/:commentId/like` — toggle comment/reply like
 
-📈 Future Enhancements
+## 📈 Future Enhancements
 
 - Real-time notifications (WebSockets)
 - Direct messaging
