@@ -41,7 +41,10 @@ A robust, scalable social media platform designed to handle high-traffic interac
   - Privacy (`public` / `private`)
 - Feed returns posts sorted newest-first.
 - Like/unlike for posts is implemented.
-- Comment creation and like/unlike for comments is implemented.
+- Comment and reply creation is implemented.
+- Like/unlike for comments and replies is implemented.
+- Reply UX supports textarea input and Enter-to-submit (hidden submit handler), matching the comment input interaction.
+- Replies are rendered as nested, indented threads for clear visual differentiation from top-level comments.
 - Feed includes liker metadata (user names) for posts and comments.
 - Privacy enforcement:
   - Public posts visible to all users.
