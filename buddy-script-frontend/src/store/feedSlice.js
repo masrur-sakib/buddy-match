@@ -62,7 +62,7 @@ export const togglePostLike = createAsyncThunk(
 
 export const createComment = createAsyncThunk(
   'feed/createComment',
-  async ({ postId, content }) => {
+  async ({ postId, content, parentId = null }) => {
     const response = await authFetch('/api/posts/comments', {
       method: 'POST',
       headers: {
@@ -71,6 +71,7 @@ export const createComment = createAsyncThunk(
       body: JSON.stringify({
         content,
         postId,
+        parentId,
       }),
     });
 
@@ -83,6 +84,7 @@ export const createComment = createAsyncThunk(
 
     return {
       postId,
+      parentId,
       comment: {
         ...data,
         User: currentUser
@@ -94,6 +96,7 @@ export const createComment = createAsyncThunk(
             }
           : undefined,
         CommentLikes: [],
+        replies: [],
       },
     };
   },
@@ -171,9 +174,18 @@ const feedSlice = createSlice({
             ];
       })
       .addCase(createComment.fulfilled, (state, action) => {
-        const { postId, comment } = action.payload;
+        const { postId, parentId, comment } = action.payload;
         const post = state.posts.find((item) => item.id === postId);
         if (!post) return;
+
+        if (parentId) {
+          const parentComment = (post.Comments || []).find(
+            (item) => item.id === parentId,
+          );
+          if (!parentComment) return;
+          parentComment.replies = [...(parentComment.replies || []), comment];
+          return;
+        }
 
         post.Comments = [...(post.Comments || []), comment];
       })
@@ -183,9 +195,17 @@ const feedSlice = createSlice({
         if (!currentUserId) return;
 
         for (const post of state.posts) {
-          const comment = (post.Comments || []).find(
+          const topLevelComment = (post.Comments || []).find(
             (item) => item.id === commentId,
           );
+          const replyComment = (post.Comments || []).find((item) =>
+            (item.replies || []).some((reply) => reply.id === commentId),
+          );
+
+          const comment = topLevelComment
+            ? topLevelComment
+            : replyComment?.replies?.find((reply) => reply.id === commentId);
+
           if (!comment) continue;
 
           const likes = comment.CommentLikes ?? [];

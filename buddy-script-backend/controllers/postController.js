@@ -64,6 +64,12 @@ exports.getFeed = async (req, res) => {
                   model: User,
                   attributes: ['firstName', 'lastName', 'profileImage'],
                 },
+                {
+                  model: CommentLike,
+                  include: [
+                    { model: User, attributes: ['firstName', 'lastName'] },
+                  ],
+                },
               ],
             },
           ],

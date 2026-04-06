@@ -28,14 +28,20 @@ export default function PostCard({ post }) {
   const [isLiking, setIsLiking] = useState(false);
   const [showLikesDrawer, setShowLikesDrawer] = useState(false);
   const [commentText, setCommentText] = useState('');
+  const [replyTexts, setReplyTexts] = useState({});
+  const [showReplyInputByComment, setShowReplyInputByComment] = useState({});
   const [isCommenting, setIsCommenting] = useState(false);
+  const [isReplySubmittingByComment, setIsReplySubmittingByComment] = useState(
+    {},
+  );
   const [isTogglingCommentLike, setIsTogglingCommentLike] = useState({});
   const [activeCommentLikesDrawerId, setActiveCommentLikesDrawerId] =
     useState(null);
   const currentUserId = currentUser?.id ?? currentUser?.userId ?? null;
   const hiddenCommentSubmitRef = useRef(null);
-  const likes = post.PostLikes ?? [];
-  const comments = post.Comments ?? [];
+  const hiddenReplySubmitRefs = useRef({});
+  const likes = useMemo(() => post.PostLikes ?? [], [post.PostLikes]);
+  const comments = useMemo(() => post.Comments ?? [], [post.Comments]);
   const likeCount = likes.length;
   const commentCount = comments.length;
 
@@ -61,10 +67,25 @@ export default function PostCard({ post }) {
 
   const activeCommentLikes = useMemo(() => {
     if (!activeCommentLikesDrawerId) return [];
-    const activeComment = comments.find(
-      (comment) => comment.id === activeCommentLikesDrawerId,
+    const activeComment = comments.find((comment) => {
+      if (comment.id === activeCommentLikesDrawerId) return true;
+      return (comment.replies || []).some(
+        (reply) => reply.id === activeCommentLikesDrawerId,
+      );
+    });
+
+    if (!activeComment) return [];
+
+    if (activeComment.id === activeCommentLikesDrawerId) {
+      return activeComment.CommentLikes || [];
+    }
+
+    const activeReply = (activeComment.replies || []).find(
+      (reply) => reply.id === activeCommentLikesDrawerId,
     );
-    return activeComment?.CommentLikes || [];
+
+    if (!activeReply) return [];
+    return activeReply.CommentLikes || [];
   }, [activeCommentLikesDrawerId, comments]);
 
   const activeCommentLikedByNames = useMemo(() => {
@@ -135,6 +156,57 @@ export default function PostCard({ post }) {
     } finally {
       setIsTogglingCommentLike((prev) => ({ ...prev, [commentId]: false }));
     }
+  };
+
+  const handleReplyInputToggle = (commentId) => {
+    setShowReplyInputByComment((prev) => ({
+      ...prev,
+      [commentId]: !prev[commentId],
+    }));
+  };
+
+  const handleReplyTextChange = (commentId, value) => {
+    setReplyTexts((prev) => ({
+      ...prev,
+      [commentId]: value,
+    }));
+  };
+
+  const handleCreateReply = async (event, parentId, postId) => {
+    event.preventDefault();
+    if (isReplySubmittingByComment[parentId]) return;
+
+    const content = (replyTexts[parentId] || '').trim();
+    if (!content) return;
+
+    setIsReplySubmittingByComment((prev) => ({ ...prev, [parentId]: true }));
+
+    try {
+      await dispatch(
+        createComment({
+          content,
+          postId,
+          parentId,
+        }),
+      ).unwrap();
+
+      setReplyTexts((prev) => ({ ...prev, [parentId]: '' }));
+      setShowReplyInputByComment((prev) => ({ ...prev, [parentId]: false }));
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsReplySubmittingByComment((prev) => ({ ...prev, [parentId]: false }));
+    }
+  };
+
+  const handleReplyKeyDown = (event, parentId) => {
+    if (event.key !== 'Enter' || event.shiftKey) return;
+
+    const content = (replyTexts[parentId] || '').trim();
+    if (!content || isReplySubmittingByComment[parentId]) return;
+
+    event.preventDefault();
+    hiddenReplySubmitRefs.current[parentId]?.click();
   };
 
   return (
@@ -321,6 +393,7 @@ export default function PostCard({ post }) {
           </div>
         )}
       </div>
+      {/* Post Reactions */}
       <div className='_feed_inner_timeline_total_reacts _padd_r24 _padd_l24 _mar_b26'>
         <div
           className='_feed_inner_timeline_total_reacts_image'
@@ -484,6 +557,7 @@ export default function PostCard({ post }) {
           </span>
         </button>
       </div>
+      {/* Likes Drawer */}
       {showLikesDrawer && (
         <div
           style={{
@@ -650,6 +724,7 @@ export default function PostCard({ post }) {
           </div>
         </div>
       )}
+      {/* Comment Section */}
       <div
         className='_feed_inner_timeline_cooment_area'
         style={{ marginLeft: '-8px' }}
@@ -660,6 +735,7 @@ export default function PostCard({ post }) {
             onSubmit={handleCreateComment}
           >
             <div className='_feed_inner_comment_box_content'>
+              {/* Comment User Avatar */}
               <div className='_feed_inner_comment_box_content_image'>
                 <UserAvatar
                   profileImage={currentUser?.profileImage}
@@ -670,6 +746,7 @@ export default function PostCard({ post }) {
                   style={{ width: '38px', height: '38px' }}
                 />
               </div>
+              {/* Comment Textarea */}
               <div className='_feed_inner_comment_box_content_txt'>
                 <textarea
                   className='form-control _comment_textarea'
@@ -748,6 +825,7 @@ export default function PostCard({ post }) {
             `${comment.User?.firstName || ''} ${comment.User?.lastName || ''}`.trim() ||
             'User';
           const localLikes = comment.CommentLikes || [];
+          const commentReplies = comment.replies || [];
           const commentLikeCount = localLikes.length;
           const isCommentLikedByMe = localLikes.some(
             (like) =>
@@ -848,7 +926,20 @@ export default function PostCard({ post }) {
                           </span>
                         </li>
                         <li>
-                          <span>Reply.</span>
+                          <span
+                            onClick={() => handleReplyInputToggle(comment.id)}
+                            role='button'
+                            tabIndex={0}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                handleReplyInputToggle(comment.id);
+                              }
+                            }}
+                            style={{ cursor: 'pointer' }}
+                          >
+                            Reply.
+                          </span>
                         </li>
                         <li>
                           <span>Share</span>
@@ -865,6 +956,204 @@ export default function PostCard({ post }) {
                     </div>
                   </div>
                 </div>
+
+                {showReplyInputByComment[comment.id] && (
+                  <div
+                    className='_feed_inner_timeline_cooment_area'
+                    style={{ marginLeft: '42px', marginTop: '10px' }}
+                  >
+                    <div className='_feed_inner_comment_box'>
+                      <form
+                        className='_feed_inner_comment_box_form'
+                        onSubmit={(event) =>
+                          handleCreateReply(event, comment.id, post.id)
+                        }
+                      >
+                        <div className='_feed_inner_comment_box_content'>
+                          <div className='_feed_inner_comment_box_content_image'>
+                            <UserAvatar
+                              profileImage={currentUser?.profileImage}
+                              firstName={currentUser?.firstName}
+                              lastName={currentUser?.lastName}
+                              className='_comment_img'
+                              initialsPadding='6px'
+                              style={{ width: '34px', height: '34px' }}
+                            />
+                          </div>
+                          <div className='_feed_inner_comment_box_content_txt'>
+                            <textarea
+                              className='form-control _comment_textarea'
+                              placeholder='Write a reply'
+                              value={replyTexts[comment.id] || ''}
+                              onChange={(event) =>
+                                handleReplyTextChange(
+                                  comment.id,
+                                  event.target.value,
+                                )
+                              }
+                              onKeyDown={(event) =>
+                                handleReplyKeyDown(event, comment.id)
+                              }
+                            ></textarea>
+                          </div>
+                        </div>
+                        <button
+                          ref={(node) => {
+                            if (!node) return;
+                            hiddenReplySubmitRefs.current[comment.id] = node;
+                          }}
+                          type='submit'
+                          disabled={isReplySubmittingByComment[comment.id]}
+                          style={{ display: 'none' }}
+                          aria-hidden='true'
+                          tabIndex={-1}
+                        />
+                      </form>
+                    </div>
+                  </div>
+                )}
+
+                {commentReplies.map((reply, replyIndex) => {
+                  const replyAuthor =
+                    `${reply.User?.firstName || ''} ${reply.User?.lastName || ''}`.trim() ||
+                    'User';
+                  const replyLikes = reply.CommentLikes || [];
+                  const replyLikeCount = replyLikes.length;
+                  const isReplyLikedByMe = replyLikes.some(
+                    (like) =>
+                      like.UserId === currentUserId ||
+                      like.User?.id === currentUserId,
+                  );
+                  const replyTime = reply.createdAt
+                    ? new Date(reply.createdAt).toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                      })
+                    : 'Just now';
+
+                  return (
+                    <div
+                      className='_comment_main'
+                      key={reply.id || `${replyAuthor}-${replyIndex}`}
+                      style={{ marginLeft: '42px' }}
+                    >
+                      <div className='_comment_image'>
+                        <a href='#0' className='_comment_image_link'>
+                          <UserAvatar
+                            profileImage={reply.User?.profileImage}
+                            firstName={reply.User?.firstName}
+                            lastName={reply.User?.lastName}
+                            className='_comment_img1'
+                          />
+                        </a>
+                      </div>
+                      <div className='_comment_area'>
+                        <div className='_comment_details'>
+                          <div className='_comment_details_top'>
+                            <div className='_comment_name'>
+                              <a href='#0'>
+                                <h4 className='_comment_name_title'>
+                                  {replyAuthor}
+                                </h4>
+                              </a>
+                            </div>
+                          </div>
+                          <div className='_comment_status'>
+                            <p className='_comment_status_text'>
+                              <span>{reply.content}</span>
+                            </p>
+                          </div>
+                          <div
+                            className='_total_reactions'
+                            style={{ right: '-20px', cursor: 'pointer' }}
+                            onClick={() =>
+                              handleOpenCommentLikesDrawer(reply.id)
+                            }
+                            role='button'
+                            tabIndex={0}
+                            onKeyDown={(event) => {
+                              if (event.key === 'Enter' || event.key === ' ') {
+                                event.preventDefault();
+                                handleOpenCommentLikesDrawer(reply.id);
+                              }
+                            }}
+                          >
+                            <div className='_total_react'>
+                              <span className='_reaction_like'>
+                                <svg
+                                  xmlns='http://www.w3.org/2000/svg'
+                                  width='16'
+                                  height='16'
+                                  viewBox='0 0 24 24'
+                                  fill='none'
+                                  stroke='currentColor'
+                                  strokeWidth='2'
+                                  strokeLinecap='round'
+                                  strokeLinejoin='round'
+                                  className='feather feather-thumbs-up'
+                                >
+                                  <path d='M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3'></path>
+                                </svg>
+                              </span>
+                            </div>
+                            <span className='_total'>{replyLikeCount}</span>
+                          </div>
+                          <div className='_comment_reply'>
+                            <div className='_comment_reply_num'>
+                              <ul
+                                className='_comment_reply_list'
+                                style={{ flexWrap: 'nowrap' }}
+                              >
+                                <li>
+                                  <span
+                                    onClick={() =>
+                                      handleToggleCommentLike(reply.id)
+                                    }
+                                    style={{
+                                      cursor: 'pointer',
+                                      color: isReplyLikedByMe
+                                        ? '#1890FF'
+                                        : 'inherit',
+                                    }}
+                                    role='button'
+                                    tabIndex={0}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter' || e.key === ' ') {
+                                        e.preventDefault();
+                                        handleToggleCommentLike(reply.id);
+                                      }
+                                    }}
+                                  >
+                                    {isReplyLikedByMe ? 'Unlike' : 'Like'}.
+                                  </span>
+                                </li>
+                                <li>
+                                  <span>Share</span>
+                                </li>
+                                <li
+                                  style={{
+                                    whiteSpace: 'nowrap',
+                                    marginLeft: '6px',
+                                  }}
+                                >
+                                  <span
+                                    className='_time_link'
+                                    style={{
+                                      fontSize: '14px',
+                                      color: '#9CA3AF',
+                                    }}
+                                  >
+                                    .{replyTime}
+                                  </span>
+                                </li>
+                              </ul>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           );
