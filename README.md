@@ -233,7 +233,6 @@ Base URL: `/api`
 
 ### 🔗 Live Links
 
-- GitHub Repository: `https://github.com/masrur-sakib/buddy-match`
-- Live Frontend URL: `https://buddy-match-frontend.vercel.app`
-- Live Backend URL: `https://buddy-match.onrender.com`
-- Video Demo: `will be added soon`
+- GitHub Repository: [https://github.com/masrur-sakib/buddy-match](https://github.com/masrur-sakib/buddy-match)
+- Live Frontend URL: [https://buddy-match-frontend.vercel.app](https://buddy-match-frontend.vercel.app)
+- Video Demo: [https://youtu.be/e0c1r7BzxUY](https://youtu.be/e0c1r7BzxUY)
