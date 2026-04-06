@@ -28,7 +28,7 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    background: 'linear-gradient(135deg, #1270CC 0%, #014d80 100%)',
     padding: '20px',
   },
   card: {
@@ -44,7 +44,7 @@ const styles = {
     fontSize: '96px',
     fontWeight: '800',
     lineHeight: 1,
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    background: 'linear-gradient(135deg, #1990FF 0%, #0168A8 100%)',
     WebkitBackgroundClip: 'text',
     WebkitTextFillColor: 'transparent',
     backgroundClip: 'text',
@@ -65,7 +65,7 @@ const styles = {
   button: {
     display: 'inline-block',
     padding: '12px 32px',
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    background: 'linear-gradient(135deg, #1990FF 0%, #0168A8 100%)',
     color: '#fff',
     borderRadius: '8px',
     fontWeight: '600',
