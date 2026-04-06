@@ -4,6 +4,7 @@ import Login from './pages/Login';
 import Registration from './pages/Registration';
 import Feed from './pages/Feed';
 import Profile from './pages/Profile';
+import NotFound from './pages/NotFound';
 
 function PrivateRoute({ children }) {
   return isAuthenticated() ? children : <Navigate to='/login' replace />;
@@ -58,6 +59,7 @@ export default function App() {
           </PrivateRoute>
         }
       />
+      <Route path='*' element={<NotFound />} />
     </Routes>
   );
 }
