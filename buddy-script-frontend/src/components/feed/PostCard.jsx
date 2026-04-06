@@ -960,7 +960,7 @@ export default function PostCard({ post }) {
                 {showReplyInputByComment[comment.id] && (
                   <div
                     className='_feed_inner_timeline_cooment_area'
-                    style={{ marginLeft: '42px', marginTop: '10px' }}
+                    style={{ marginLeft: '56px', marginTop: '12px' }}
                   >
                     <div className='_feed_inner_comment_box'>
                       <form
@@ -977,7 +977,12 @@ export default function PostCard({ post }) {
                               lastName={currentUser?.lastName}
                               className='_comment_img'
                               initialsPadding='6px'
-                              style={{ width: '34px', height: '34px' }}
+                              style={{
+                                width: '34px',
+                                height: '34px',
+                                minWidth: '34px',
+                                minHeight: '34px',
+                              }}
                             />
                           </div>
                           <div className='_feed_inner_comment_box_content_txt'>
@@ -1035,7 +1040,7 @@ export default function PostCard({ post }) {
                     <div
                       className='_comment_main'
                       key={reply.id || `${replyAuthor}-${replyIndex}`}
-                      style={{ marginLeft: '42px' }}
+                      style={{ marginLeft: '56px', marginTop: '10px' }}
                     >
                       <div className='_comment_image'>
                         <a href='#0' className='_comment_image_link'>
@@ -1044,10 +1049,21 @@ export default function PostCard({ post }) {
                             firstName={reply.User?.firstName}
                             lastName={reply.User?.lastName}
                             className='_comment_img1'
+                            initialsPadding='6px'
+                            initialsFontSize='0.78em'
+                            style={{
+                              width: '34px',
+                              height: '34px',
+                              minWidth: '34px',
+                              minHeight: '34px',
+                            }}
                           />
                         </a>
                       </div>
-                      <div className='_comment_area'>
+                      <div
+                        className='_comment_area'
+                        style={{ marginLeft: '8px' }}
+                      >
                         <div className='_comment_details'>
                           <div className='_comment_details_top'>
                             <div className='_comment_name'>
