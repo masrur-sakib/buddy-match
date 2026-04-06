@@ -213,6 +213,16 @@ Base URL: `/api`
 - `POST /posts/comments` — create comment (`content`, `postId`, optional `parentId` for reply)
 - `POST /posts/comments/:commentId/like` — toggle comment/reply like
 
+📈 Future Enhancements
+
+- Real-time notifications (WebSockets)
+- Direct messaging
+- Follow/unfollow system
+- Hashtags and mentions
+- Search functionality
+- Email verification
+- Password reset
+
 ### 🌐 Live Deployment
 
 - **Backend**: Deployed on **Render**.
