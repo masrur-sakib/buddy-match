@@ -2,6 +2,12 @@
 
 A robust, scalable social media platform designed to handle high-traffic interactions. This application features a React-based frontend with centralized state management and a high-performance Express backend utilizing Sequelize ORM with a Supabase-hosted PostgreSQL instance.
 
+### 🔗 Live Links
+
+- GitHub Repository: [https://github.com/masrur-sakib/buddy-match](https://github.com/masrur-sakib/buddy-match)
+- Live Frontend URL: [https://buddy-match-frontend.vercel.app](https://buddy-match-frontend.vercel.app)
+- Video Demo: [https://youtu.be/e0c1r7BzxUY](https://youtu.be/e0c1r7BzxUY)
+
 ## 🛠 Tech Stack
 
 ### Frontend
@@ -231,8 +237,3 @@ Base URL: `/api`
 - **Backend**: Deployed on **Render**.
 - **Frontend**: Deployed on **Vercel**.
 
-### 🔗 Live Links
-
-- GitHub Repository: [https://github.com/masrur-sakib/buddy-match](https://github.com/masrur-sakib/buddy-match)
-- Live Frontend URL: [https://buddy-match-frontend.vercel.app](https://buddy-match-frontend.vercel.app)
-- Video Demo: [https://youtu.be/e0c1r7BzxUY](https://youtu.be/e0c1r7BzxUY)
