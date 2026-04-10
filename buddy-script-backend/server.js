@@ -12,6 +12,10 @@ app.use(cors());
 app.use(express.json());
 
 // Routes
+app.get('/', (req, res) => {
+  res.json({ message: 'Welcome to Buddy Script API Server' });
+});
+
 app.use('/api/auth', authRoutes);
 app.use('/api/posts', postRoutes);
 
