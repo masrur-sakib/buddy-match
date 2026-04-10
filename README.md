@@ -5,7 +5,8 @@ A robust, scalable social media platform designed to handle high-traffic interac
 ### 🔗 Live Links
 
 - GitHub Repository: [https://github.com/masrur-sakib/buddy-match](https://github.com/masrur-sakib/buddy-match)
-- Live Frontend URL: [https://buddy-match-frontend.vercel.app](https://buddy-match-frontend.vercel.app)
+- Live Frontend: [https://buddy-match-frontend.vercel.app](https://buddy-match-frontend.vercel.app)
+- Live Backend: [https://buddy-match.onrender.com](https://buddy-match.onrender.com)
 - Video Demo: [https://youtu.be/e0c1r7BzxUY](https://youtu.be/e0c1r7BzxUY)
 
 ## 🛠 Tech Stack
@@ -236,4 +237,3 @@ Base URL: `/api`
 
 - **Backend**: Deployed on **Render**.
 - **Frontend**: Deployed on **Vercel**.
-
